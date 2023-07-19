@@ -16,24 +16,17 @@ X_scaled(:, [1, 30]) = rescale(X_scaled(:, [1, 30]), -1, 1);
 %% Perform PCA on columns 1 and 30 of the scaled data
 [coeff, score] = pca(X_scaled(:, [1, 30]));
 
-% Select the transformed features after PCA
-X_pca = score(:, 1:end-1);
-
 % Combine PCA-transformed features with remaining features
-X_combined = [X_pca, X(:, [2:29, 31:end])];
+X_combined = [score, X(:, [2:29, 31:end])];
 
 % Create a new table with the transformed features
-data_pca = array2table(X_combined);
+data_features = array2table(X_combined);
 
 % Get the original variable names from the first 30 columns of the data
 original_variable_names = features.Properties.VariableNames;
 
-% Update the variable names of the features
-features_with_original_names = [compose('Time'), original_variable_names(2:end)];
-
-% Create a new table with the top features and their original variable names
-data_features = [array2table(X_pca), features(:, 2:end)];
-data_features.Properties.VariableNames = features_with_original_names;
+% Update the variable names of the data_features table
+data_features.Properties.VariableNames = original_variable_names;
 
 % Add the 'Class' column from the original dataset to the table
 data_features.Class = data.Class;
