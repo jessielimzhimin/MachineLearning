@@ -14,7 +14,7 @@ X_scaled = X;
 X_scaled(:, [1, 30]) = rescale(X_scaled(:, [1, 30]), -1, 1);
 
 %% Perform PCA on columns 1 and 30 of the scaled data
-[coeff, score] = pca(X_scaled(:, [1, 30]));
+[coeff, score] = pca(X_scaled(:, [1, 30]), 'Centered',true);
 
 % Combine PCA-transformed features with remaining features
 X_combined = [score, X(:, [2:29, 31:end])];
