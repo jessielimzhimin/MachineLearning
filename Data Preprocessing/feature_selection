@@ -1,0 +1,52 @@
+%% Prepare the data to be used
+data = readtable('creditcard_pca.csv');
+
+% Select features and labels columns from the imported data in data variable
+features = data(:, 1:30);
+labels = data(:, end);
+
+% Convert data to arrays
+X = table2array(features);
+y = table2array(labels);
+
+% Make the data cross-validation set
+cv_feature = cvpartition(y, 'HoldOut', 0.2); % 80% training, 20% testing
+
+% Make the training and test data
+X_train_feature = X(cv_feature.training, :);
+y_train_feature = y(cv_feature.training, :);
+X_test_feature = X(cv_feature.test, :);
+y_test_feature = y(cv_feature.test, :);
+
+%% Use random forest to select features
+nTrees = 100; % Number of trees in the random forest
+model_feature = TreeBagger(nTrees, X_train_feature, y_train_feature, 'OOBPredictorImportance', 'on');
+
+% Calculate how important the features are
+importance = model_feature.OOBPermutedVarDeltaError';
+
+% Sort features starting with the most important one till the least important one
+[sorted_importance, sorted_indices] = sort(importance, 'descend');
+
+num_features = min(25, numel(sorted_indices)); % Select maximum of 25 features or the available number of features
+top_features_indices = sorted_indices(1:num_features);
+top_features = features.Properties.VariableNames(top_features_indices);
+
+% Get the original variable names from the first 30 columns of the data
+original_variable_names = data.Properties.VariableNames(1:30);
+
+% Update the variable names of the top features
+top_features_with_original_names = original_variable_names(top_features_indices);
+
+% Create a new table with the top features and their original variable names
+data_topfeatures = data(:, top_features_indices);
+data_topfeatures.Properties.VariableNames = top_features_with_original_names;
+
+% Add the 'Class' column from the original dataset to the table
+data_topfeatures.Class = data.Class;
+
+% Specify the name of the output file
+output_file = 'creditcard_topfeatures.csv';
+
+% Write the table to a CSV file
+writetable(data_topfeatures, output_file);
